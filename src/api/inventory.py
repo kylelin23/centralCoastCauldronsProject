@@ -56,7 +56,11 @@ def get_inventory():
 
         number_of_potions = result.total_potions
 
-    return InventoryAudit(number_of_potions=0, ml_in_barrels=0, gold=gold)
+    return InventoryAudit(
+        number_of_potions=number_of_potions,
+        ml_in_barrels=ml_in_barrels,
+        gold=gold
+    )
 
 
 @router.post("/plan", response_model=CapacityPlan)

@@ -1,6 +1,10 @@
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 from typing import List, Annotated
+from src import database as db
+import sqlalchemy
+
+
 
 router = APIRouter()
 
