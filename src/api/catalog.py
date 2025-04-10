@@ -5,7 +5,6 @@ from src import database as db
 import sqlalchemy
 
 
-
 router = APIRouter()
 
 
@@ -28,52 +27,64 @@ def create_catalog() -> List[CatalogItem]:
 
     with db.engine.begin() as connection:
         red = connection.execute(
-            sqlalchemy.text("""
+            sqlalchemy.text(
+                """
                 SELECT COALESCE(SUM(quantity), 0) AS qty FROM potion_inventory
                 WHERE red = 100 AND green = 0 AND blue = 0 AND dark = 0
-            """)
+            """
+            )
         ).scalar_one()
 
         if red > 0:
-            catalog.append(CatalogItem(
-                sku="RED_POTION_0",
-                name="red potion",
-                quantity=red,
-                price=50,
-                potion_type=[100, 0, 0, 0]
-            ))
+            catalog.append(
+                CatalogItem(
+                    sku="RED_POTION_0",
+                    name="red potion",
+                    quantity=red,
+                    price=50,
+                    potion_type=[100, 0, 0, 0],
+                )
+            )
 
         green = connection.execute(
-            sqlalchemy.text("""
+            sqlalchemy.text(
+                """
                 SELECT COALESCE(SUM(quantity), 0) AS qty FROM potion_inventory
                 WHERE green = 100 AND red = 0 AND blue = 0 AND dark = 0
-            """)
+            """
+            )
         ).scalar_one()
 
         if green > 0:
-            catalog.append(CatalogItem(
-                sku="GREEN_POTION_0",
-                name="green potion",
-                quantity=green,
-                price=50,
-                potion_type=[0, 100, 0, 0]
-            ))
+            catalog.append(
+                CatalogItem(
+                    sku="GREEN_POTION_0",
+                    name="green potion",
+                    quantity=green,
+                    price=50,
+                    potion_type=[0, 100, 0, 0],
+                )
+            )
 
         blue = connection.execute(
-            sqlalchemy.text("""
+            sqlalchemy.text(
+                """
                 SELECT COALESCE(SUM(quantity), 0) AS qty FROM potion_inventory
                 WHERE blue = 100 AND red = 0 AND green = 0 AND dark = 0
-            """)
+            """
+            )
         ).scalar_one()
 
         if blue > 0:
-            catalog.append(CatalogItem(
-                sku="BLUE_POTION_0",
-                name="blue potion",
-                quantity=blue,
-                price=50,
-                potion_type=[0, 0, 100, 0]
-            ))
+            catalog.append(
+                CatalogItem(
+                    sku="BLUE_POTION_0",
+                    name="blue potion",
+                    quantity=blue,
+                    price=50,
+                    potion_type=[0, 0, 100, 0],
+                )
+            )
 
     return catalog
     # return [

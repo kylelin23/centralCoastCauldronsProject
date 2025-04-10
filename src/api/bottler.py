@@ -6,7 +6,6 @@ from src import database as db
 import sqlalchemy
 
 
-
 router = APIRouter(
     prefix="/bottler",
     tags=["bottler"],
@@ -55,10 +54,12 @@ def post_deliver_bottles(potions_delivered: List[PotionMixes], order_id: int):
             dark_used += qty * pt[3]
 
             connection.execute(
-                sqlalchemy.text("""
+                sqlalchemy.text(
+                    """
                     INSERT INTO potion_inventory (red, green, blue, dark, quantity)
                     VALUES (:r, :g, :b, :d, :q)
-                """),
+                """
+                ),
                 {
                     "r": pt[0],
                     "g": pt[1],
@@ -69,13 +70,15 @@ def post_deliver_bottles(potions_delivered: List[PotionMixes], order_id: int):
             )
 
         connection.execute(
-            sqlalchemy.text("""
+            sqlalchemy.text(
+                """
                 UPDATE global_inventory SET
                     red_ml = red_ml - :red,
                     green_ml = green_ml - :green,
                     blue_ml = blue_ml - :blue,
                     dark_ml = dark_ml - :dark
-            """),
+            """
+            ),
             {
                 "red": red_used,
                 "green": green_used,
@@ -83,7 +86,6 @@ def post_deliver_bottles(potions_delivered: List[PotionMixes], order_id: int):
                 "dark": dark_used,
             },
         )
-
 
     # TODO: Subtract ml based on how much delivered potions used.
     pass
@@ -104,14 +106,17 @@ def create_bottle_plan(
     if red_quantity > 0:
         plan.append(PotionMixes(potion_type=[100, 0, 0, 0], quantity=red_quantity))
 
-    green_quantity = min(green_ml // 100, maximum_potion_capacity - sum(p.quantity for p in plan))
+    green_quantity = min(
+        green_ml // 100, maximum_potion_capacity - sum(p.quantity for p in plan)
+    )
     if green_quantity > 0:
         plan.append(PotionMixes(potion_type=[0, 100, 0, 0], quantity=green_quantity))
 
-    blue_quantity = min(blue_ml // 100, maximum_potion_capacity - sum(p.quantity for p in plan))
+    blue_quantity = min(
+        blue_ml // 100, maximum_potion_capacity - sum(p.quantity for p in plan)
+    )
     if blue_quantity > 0:
         plan.append(PotionMixes(potion_type=[0, 0, 100, 0], quantity=blue_quantity))
-
 
     return plan
 

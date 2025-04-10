@@ -28,11 +28,31 @@ def test_barrel_delivery() -> None:
     delivery_summary = calculate_barrel_summary(delivery)
 
     assert delivery_summary.gold_paid == 1750
+
+
 def test_buy_small_red_barrel_plan() -> None:
     wholesale_catalog: List[Barrel] = [
-        Barrel(sku="SMALL_RED_BARREL", ml_per_barrel=1000, potion_type=[1.0, 0, 0, 0], price=100, quantity=10),
-        Barrel(sku="SMALL_GREEN_BARREL", ml_per_barrel=1000, potion_type=[0, 1.0, 0, 0], price=150, quantity=5),
-        Barrel(sku="SMALL_BLUE_BARREL", ml_per_barrel=1000, potion_type=[0, 0, 1.0, 0], price=500, quantity=2),
+        Barrel(
+            sku="SMALL_RED_BARREL",
+            ml_per_barrel=1000,
+            potion_type=[1.0, 0, 0, 0],
+            price=100,
+            quantity=10,
+        ),
+        Barrel(
+            sku="SMALL_GREEN_BARREL",
+            ml_per_barrel=1000,
+            potion_type=[0, 1.0, 0, 0],
+            price=150,
+            quantity=5,
+        ),
+        Barrel(
+            sku="SMALL_BLUE_BARREL",
+            ml_per_barrel=1000,
+            potion_type=[0, 0, 1.0, 0],
+            price=500,
+            quantity=2,
+        ),
     ]
 
     gold = 100
@@ -61,9 +81,27 @@ def test_buy_small_red_barrel_plan() -> None:
 
 def test_cant_afford_barrel_plan() -> None:
     wholesale_catalog: List[Barrel] = [
-        Barrel(sku="SMALL_RED_BARREL", ml_per_barrel=1000, potion_type=[1.0, 0, 0, 0], price=100, quantity=10),
-        Barrel(sku="SMALL_GREEN_BARREL", ml_per_barrel=1000, potion_type=[0, 1.0, 0, 0], price=150, quantity=5),
-        Barrel(sku="SMALL_BLUE_BARREL", ml_per_barrel=1000, potion_type=[0, 0, 1.0, 0], price=500, quantity=2),
+        Barrel(
+            sku="SMALL_RED_BARREL",
+            ml_per_barrel=1000,
+            potion_type=[1.0, 0, 0, 0],
+            price=100,
+            quantity=10,
+        ),
+        Barrel(
+            sku="SMALL_GREEN_BARREL",
+            ml_per_barrel=1000,
+            potion_type=[0, 1.0, 0, 0],
+            price=150,
+            quantity=5,
+        ),
+        Barrel(
+            sku="SMALL_BLUE_BARREL",
+            ml_per_barrel=1000,
+            potion_type=[0, 0, 1.0, 0],
+            price=500,
+            quantity=2,
+        ),
     ]
 
     gold = 50
@@ -89,7 +127,13 @@ def test_cant_afford_barrel_plan() -> None:
 
 def test_capacity_limit_blocks_purchase() -> None:
     wholesale_catalog = [
-        Barrel(sku="SMALL_RED_BARREL", ml_per_barrel=1000, potion_type=[1.0, 0, 0, 0], price=100, quantity=10),
+        Barrel(
+            sku="SMALL_RED_BARREL",
+            ml_per_barrel=1000,
+            potion_type=[1.0, 0, 0, 0],
+            price=100,
+            quantity=10,
+        ),
     ]
 
     gold = 1000
@@ -114,8 +158,20 @@ def test_capacity_limit_blocks_purchase() -> None:
 
 def test_prefers_cheapest_available_barrel() -> None:
     wholesale_catalog = [
-        Barrel(sku="CHEAP_GREEN", ml_per_barrel=1000, potion_type=[0, 1.0, 0, 0], price=100, quantity=1),
-        Barrel(sku="EXPENSIVE_GREEN", ml_per_barrel=1000, potion_type=[0, 1.0, 0, 0], price=300, quantity=1),
+        Barrel(
+            sku="CHEAP_GREEN",
+            ml_per_barrel=1000,
+            potion_type=[0, 1.0, 0, 0],
+            price=100,
+            quantity=1,
+        ),
+        Barrel(
+            sku="EXPENSIVE_GREEN",
+            ml_per_barrel=1000,
+            potion_type=[0, 1.0, 0, 0],
+            price=300,
+            quantity=1,
+        ),
     ]
 
     gold = 150

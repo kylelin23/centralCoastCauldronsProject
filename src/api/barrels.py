@@ -9,7 +9,6 @@ from src.api import auth
 from src import database as db
 
 
-
 router = APIRouter(
     prefix="/barrels",
     tags=["barrels"],
@@ -81,11 +80,14 @@ def post_deliver_barrels(barrels_delivered: List[Barrel], order_id: int):
                 gold = gold - :gold_paid
                 """
             ),
-            [{"gold_paid": delivery.gold_paid,
-                "red_ml": int(red_ml),
-                "green_ml": int(green_ml),
-                "blue_ml": int(blue_ml),
-            }]
+            [
+                {
+                    "gold_paid": delivery.gold_paid,
+                    "red_ml": int(red_ml),
+                    "green_ml": int(green_ml),
+                    "blue_ml": int(blue_ml),
+                }
+            ],
         )
 
     pass
@@ -119,7 +121,7 @@ def create_barrel_plan(
     if currentMl < 5000:
 
         candidateBarrel = None
-        min_price = float('inf')
+        min_price = float("inf")
         # Find the cheapest small barrel
         for barrel in wholesale_catalog:
             if barrel.potion_type[index] == 1.0 and barrel.price < min_price:
@@ -127,9 +129,6 @@ def create_barrel_plan(
                 min_price = barrel.price
     if candidateBarrel and candidateBarrel.price <= gold:
         return [BarrelOrder(sku=candidateBarrel.sku, quantity=1)]
-
-
-
 
     # find cheapest red barrel
     red_barrel = min(

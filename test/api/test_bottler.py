@@ -25,6 +25,7 @@ def test_bottle_red_potions() -> None:
     assert result[0].potion_type == [100, 0, 0, 0]
     assert result[0].quantity == 5
 
+
 def test_bottle_green_potions() -> None:
     result = create_bottle_plan(
         red_ml=0,
@@ -50,8 +51,9 @@ def test_bottle_blue_and_green_combo() -> None:
         current_potion_inventory=[],
     )
 
-    assert any(mix.potion_type == [0, 100, 0, 0] for mix in result) or \
-           any(mix.potion_type == [0, 0, 100, 0] for mix in result)
+    assert any(mix.potion_type == [0, 100, 0, 0] for mix in result) or any(
+        mix.potion_type == [0, 0, 100, 0] for mix in result
+    )
 
 
 def test_respect_max_capacity() -> None:
