@@ -21,10 +21,26 @@ def reset():
         connection.execute(
             sqlalchemy.text(
                 """
-                UPDATE global_inventory SET 
-                gold = 100
+                UPDATE global_inventory SET
+                gold = 100,
+                red_ml = 0,
+                green_ml = 0,
+                blue_ml = 0,
                 """
             )
         )
-    # TODO: Implement database write logic here
-    pass
+        connection.execute(
+            sqlalchemy.text(
+                """
+                DELETE FROM potion_inventory
+                """
+            )
+        )
+        connection.execute(
+            sqlalchemy.text(
+                """
+                DELETE FROM barrel_inventory
+                """
+            )
+        )
+    return

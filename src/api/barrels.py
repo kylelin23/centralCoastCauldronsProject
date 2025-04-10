@@ -2,10 +2,13 @@ from dataclasses import dataclass
 from fastapi import APIRouter, Depends, status
 from pydantic import BaseModel, Field, field_validator
 from typing import List
+import random
 
 import sqlalchemy
 from src.api import auth
 from src import database as db
+
+
 
 router = APIRouter(
     prefix="/barrels",
@@ -60,15 +63,29 @@ def post_deliver_barrels(barrels_delivered: List[Barrel], order_id: int):
 
     delivery = calculate_barrel_summary(barrels_delivered)
 
+    red_ml = 0
+    green_ml = 0
+    blue_ml = 0
+
+    for barrel in barrels_delivered:
+        total_ml = barrel.ml_per_barrel * barrel.quantity
+        red_ml += total_ml * barrel.potion_type[0]
+        green_ml += total_ml * barrel.potion_type[1]
+        blue_ml += total_ml * barrel.potion_type[2]
+
     with db.engine.begin() as connection:
         connection.execute(
             sqlalchemy.text(
                 """
-                UPDATE global_inventory SET 
+                UPDATE global_inventory SET
                 gold = gold - :gold_paid
                 """
             ),
-            [{"gold_paid": delivery.gold_paid}],
+            [{"gold_paid": delivery.gold_paid,
+                "red_ml": int(red_ml),
+                "green_ml": int(green_ml),
+                "blue_ml": int(blue_ml),
+            }]
         )
 
     pass
@@ -84,8 +101,35 @@ def create_barrel_plan(
     wholesale_catalog: List[Barrel],
 ) -> List[BarrelOrder]:
     print(
-        f"gold: {gold}, max_barrel_capacity: {max_barrel_capacity}, current_red_ml: {current_red_ml}, current_green_ml: {current_green_ml}, current_blue_ml: {current_blue_ml}, current_dark_ml: {current_dark_ml}, wholesale_catalog: {wholesale_catalog}"
+        f"gold: {gold}, max_barrel_capacity: {max_barrel_capacity}, current_red_ml: {current_red_ml}, current_green_ml: {current_green_ml}, current_blue_ml: {current_blue_ml}, wholesale_catalog: {wholesale_catalog}"
     )
+
+    colors = ["red", "blue", "green"]
+    color = random.choice(colors)
+
+    dict = {
+        "red": {"index": 0, "current_ml": current_red_ml},
+        "green": {"index": 1, "current_ml": current_green_ml},
+        "blue": {"index": 2, "current_ml": current_blue_ml},
+    }
+
+    index = dict[color]["index"]
+    currentMl = dict[color]["current_ml"]
+
+    if currentMl < 5000:
+
+        candidateBarrel = None
+        min_price = float('inf')
+        # Find the cheapest small barrel
+        for barrel in wholesale_catalog:
+            if barrel.potion_type[index] == 1.0 and barrel.price < min_price:
+                candidateBarrel = barrel
+                min_price = barrel.price
+    if candidateBarrel and candidateBarrel.price <= gold:
+        return [BarrelOrder(sku=candidateBarrel.sku, quantity=1)]
+
+
+
 
     # find cheapest red barrel
     red_barrel = min(
@@ -126,9 +170,9 @@ def get_wholesale_purchase_plan(wholesale_catalog: List[Barrel]):
     return create_barrel_plan(
         gold=gold,
         max_barrel_capacity=10000,
-        current_red_ml=0,
-        current_green_ml=0,
-        current_blue_ml=0,
+        current_red_ml=row.red_ml,
+        current_green_ml=row.green_ml,
+        current_blue_ml=row.blue_ml,
         current_dark_ml=0,
         wholesale_catalog=wholesale_catalog,
     )

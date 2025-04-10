@@ -135,32 +135,53 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
     if cart_id not in carts:
         raise HTTPException(status_code=404, detail="Cart not found")
 
-    total_potions_bought = sum(carts[cart_id].values())
-    total_gold_paid = total_potions_bought * 50  # Assuming each potion costs 50 gold
+    cart = carts[cart_id]
+    total_potions_bought = 0
+    total_gold_paid = 0
+
+    # total_potions_bought = sum(carts[cart_id].values())
+    # total_gold_paid = total_potions_bought * 50  # Assuming each potion costs 50 gold
 
     with db.engine.begin() as connection:
-        row = connection.execute(
-            sqlalchemy.text(
-                """
-                SELECT gold FROM global_inventory
-                """
-            )
-        ).one()
+        for sku, quantity in cart.items():
+            if sku == "RED_POTION_0":
+                potion_type = {"red": 100, "green": 0, "blue": 0, "dark": 0}
+            elif sku == "GREEN_POTION_0":
+                potion_type = {"red": 0, "green": 100, "blue": 0, "dark": 0}
+            elif sku == "BLUE_POTION_0":
+                potion_type = {"red": 0, "green": 0, "blue": 100, "dark": 0}
+            else:
+                raise HTTPException(status_code=400, detail=f"Unsupported SKU: {sku}")
 
-        gold = row.gold
-        gold += total_gold_paid
+            connection.execute(
+                sqlalchemy.text(
+                    """
+                    UPDATE potion_inventory
+                    SET quantity = quantity - :qty
+                    WHERE red = :red AND green = :green AND blue = :blue AND dark = :dark
+                    """
+                ),
+                {
+                    "qty": quantity,
+                    **potion_type,
+                },
+            )
+
+            total_potions_bought += quantity
+            total_gold_paid += quantity * 50
 
         connection.execute(
             sqlalchemy.text(
                 """
-                UPDATE global_inventory SET 
-                gold = :total_gold
+                UPDATE global_inventory
+                SET gold = gold + :added_gold
                 """
             ),
-            [{"total_gold": gold}],
+            {"added_gold": total_gold_paid},
         )
-    # TODO: Deduct the right potions from inventory to the shop
 
     return CheckoutResponse(
-        total_potions_bought=total_potions_bought, total_gold_paid=total_gold_paid
+        total_potions_bought=total_potions_bought,
+        total_gold_paid=total_gold_paid,
     )
+    # TODO: Deduct the right potions from inventory to the shop

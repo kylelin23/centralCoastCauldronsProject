@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field, field_validator
 from typing import List
 from src.api import auth
 
+
 router = APIRouter(
     prefix="/bottler",
     tags=["bottler"],
@@ -38,6 +39,49 @@ def post_deliver_bottles(potions_delivered: List[PotionMixes], order_id: int):
     print(f"potions delivered: {potions_delivered} order_id: {order_id}")
 
     # TODO: Record values of delivered potions in your database.
+    red_used = green_used = blue_used = dark_used = 0
+
+    with db.engine.begin() as connection:
+        for potion in potions_delivered:
+            qty = potion.quantity
+            pt = potion.potion_type
+
+            red_used += qty * pt[0]
+            green_used += qty * pt[1]
+            blue_used += qty * pt[2]
+            dark_used += qty * pt[3]
+
+            connection.execute(
+                sqlalchemy.text("""
+                    INSERT INTO potion_inventory (red, green, blue, dark, quantity)
+                    VALUES (:r, :g, :b, :d, :q)
+                """),
+                {
+                    "r": pt[0],
+                    "g": pt[1],
+                    "b": pt[2],
+                    "d": pt[3],
+                    "q": qty,
+                },
+            )
+
+        connection.execute(
+            sqlalchemy.text("""
+                UPDATE global_inventory SET
+                    red_ml = red_ml - :red,
+                    green_ml = green_ml - :green,
+                    blue_ml = blue_ml - :blue,
+                    dark_ml = dark_ml - :dark
+            """),
+            {
+                "red": red_used,
+                "green": green_used,
+                "blue": blue_used,
+                "dark": dark_used,
+            },
+        )
+
+
     # TODO: Subtract ml based on how much delivered potions used.
     pass
 
@@ -50,13 +94,30 @@ def create_bottle_plan(
     maximum_potion_capacity: int,
     current_potion_inventory: List[PotionMixes],
 ) -> List[PotionMixes]:
-    # TODO: Create a real bottle plan logic
-    return [
-        PotionMixes(
-            potion_type=[100, 0, 0, 0],
-            quantity=5,
-        )
-    ]
+
+    plan = []
+
+    red_quantity = min(red_ml // 100, maximum_potion_capacity)
+    if red_quantity > 0:
+        plan.append(PotionMixes(potion_type=[100, 0, 0, 0], quantity=red_quantity))
+
+    green_quantity = min(green_ml // 100, maximum_potion_capacity - sum(p.quantity for p in plan))
+    if green_quantity > 0:
+        plan.append(PotionMixes(potion_type=[0, 100, 0, 0], quantity=green_quantity))
+
+    blue_quantity = min(blue_ml // 100, maximum_potion_capacity - sum(p.quantity for p in plan))
+    if blue_quantity > 0:
+        plan.append(PotionMixes(potion_type=[0, 0, 100, 0], quantity=blue_quantity))
+
+
+    return plan
+
+    # return [
+    #     PotionMixes(
+    #         potion_type=[100, 0, 0, 0],
+    #         quantity=5,
+    #     )
+    # ]
 
 
 @router.post("/plan", response_model=List[PotionMixes])
@@ -79,4 +140,5 @@ def get_bottle_plan():
 
 
 if __name__ == "__main__":
+
     print(get_bottle_plan())
