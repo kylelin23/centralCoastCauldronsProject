@@ -137,7 +137,7 @@ def test_capacity_limit_blocks_purchase() -> None:
     ]
 
     gold = 1000
-    max_barrel_capacity = 5000  # Already at max capacity
+    max_barrel_capacity = 5000  
     current_red_ml = 5000
     current_green_ml = 0
     current_blue_ml = 0
@@ -194,3 +194,68 @@ def test_prefers_cheapest_available_barrel() -> None:
     assert len(barrel_orders) == 1
     assert barrel_orders[0].sku == "CHEAP_GREEN"
     assert barrel_orders[0].quantity == 1
+
+@pytest.fixture(scope="module")
+def setup_inventory():
+    with db.engine.begin() as connection:
+        connection.execute(
+            sqlalchemy.text("""
+                INSERT INTO potion_inventory (sku, red, green, blue, dark, quantity)
+                VALUES ('RED_POTION_0', 100, 0, 0, 0, 10),
+                       ('GREEN_POTION_0', 0, 100, 0, 0, 10),
+                       ('BLUE_POTION_0', 0, 0, 100, 0, 10)
+            """)
+        )
+    yield
+    with db.engine.begin() as connection:
+        connection.execute(
+            sqlalchemy.text("""
+                DELETE FROM potion_inventory WHERE sku IN ('RED_POTION_0', 'GREEN_POTION_0', 'BLUE_POTION_0')
+            """)
+        )
+
+
+def test_cart_checkout_updates_inventory(client, setup_inventory):
+    cart_id = 1
+    response = client.post(f"/carts/{cart_id}/items/RED_POTION_0", json={"quantity": 2})
+    assert response.status_code == 204
+
+    response = client.post(f"/carts/{cart_id}/items/GREEN_POTION_0", json={"quantity": 3})
+    assert response.status_code == 204
+
+    response = client.post(f"/carts/{cart_id}/checkout", json={"payment": "credit_card"})
+    assert response.status_code == 200
+    assert "order_id" in response.json()
+
+    with db.engine.begin() as connection:
+        result = connection.execute(
+            sqlalchemy.text("""
+                SELECT quantity FROM potion_inventory WHERE sku = 'RED_POTION_0'
+            """)
+        ).fetchone()
+        assert result['quantity'] == 8
+
+        result = connection.execute(
+            sqlalchemy.text("""
+                SELECT quantity FROM potion_inventory WHERE sku = 'GREEN_POTION_0'
+            """)
+        ).fetchone()
+        assert result['quantity'] == 7
+
+
+def test_custom_potion_mixes(client, setup_inventory):
+    cart_id = 2
+    response = client.post(f"/carts/{cart_id}/items/RED_POTION_0", json={"quantity": 5})
+    assert response.status_code == 204
+
+    response = client.post(f"/carts/{cart_id}/checkout", json={"payment": "credit_card"})
+    assert response.status_code == 200
+    assert "order_id" in response.json()
+
+    with db.engine.begin() as connection:
+        result = connection.execute(
+            sqlalchemy.text("""
+                SELECT quantity FROM potion_inventory WHERE sku = 'RED_POTION_0'
+            """)
+        ).fetchone()
+        assert result['quantity'] == 5
