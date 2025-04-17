@@ -5,6 +5,7 @@ from src.api import auth
 from enum import Enum
 from typing import List, Optional
 from src import database as db
+from datetime import datetime
 
 router = APIRouter(
     prefix="/carts",
@@ -138,32 +139,58 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
     cart = carts[cart_id]
     total_potions_bought = 0
     total_gold_paid = 0
-
-    # total_potions_bought = sum(carts[cart_id].values())
-    # total_gold_paid = total_potions_bought * 50  # Assuming each potion costs 50 gold
+    order_id = None
 
     with db.engine.begin() as connection:
+        order_id = connection.execute(
+            sqlalchemy.text("""
+                INSERT INTO orders (cart_id, total_gold_paid, created_at)
+                VALUES (:cart_id, :total_gold_paid, :created_at)
+                RETURNING order_id
+            """),
+            {
+                "cart_id": cart_id,
+                "total_gold_paid": total_gold_paid,
+                "created_at": datetime.utcnow(),
+            }
+        ).fetchone()[0]
+
         for sku, quantity in cart.items():
-            if sku == "RED_POTION_0":
-                potion_type = {"red": 100, "green": 0, "blue": 0, "dark": 0}
-            elif sku == "GREEN_POTION_0":
-                potion_type = {"red": 0, "green": 100, "blue": 0, "dark": 0}
-            elif sku == "BLUE_POTION_0":
-                potion_type = {"red": 0, "green": 0, "blue": 100, "dark": 0}
-            else:
-                raise HTTPException(status_code=400, detail=f"Unsupported SKU: {sku}")
+            potion_inventory = connection.execute(
+                sqlalchemy.text("""
+                    SELECT sku, red, green, blue, dark, quantity
+                    FROM potion_inventory
+                    WHERE sku = :sku
+                """),
+                {"sku": sku}
+            ).fetchone()
+
+            if potion_inventory is None:
+                raise HTTPException(status_code=400, detail=f"SKU {sku} not found in inventory")
+
+            new_quantity = potion_inventory['quantity'] - quantity
+            if new_quantity < 0:
+                raise HTTPException(status_code=400, detail=f"Not enough stock for SKU: {sku}")
 
             connection.execute(
-                sqlalchemy.text(
-                    """
+                sqlalchemy.text("""
                     UPDATE potion_inventory
-                    SET quantity = quantity - :qty
-                    WHERE red = :red AND green = :green AND blue = :blue AND dark = :dark
-                    """
-                ),
+                    SET quantity = :new_quantity
+                    WHERE sku = :sku
+                """),
+                {"sku": sku, "new_quantity": new_quantity},
+            )
+
+            connection.execute(
+                sqlalchemy.text("""
+                    INSERT INTO order_items (order_id, sku, quantity, line_item_total)
+                    VALUES (:order_id, :sku, :quantity, :line_item_total)
+                """),
                 {
-                    "qty": quantity,
-                    **potion_type,
+                    "order_id": order_id,
+                    "sku": sku,
+                    "quantity": quantity,
+                    "line_item_total": quantity * 50,
                 },
             )
 
@@ -171,17 +198,15 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
             total_gold_paid += quantity * 50
 
         connection.execute(
-            sqlalchemy.text(
-                """
+            sqlalchemy.text("""
                 UPDATE global_inventory
                 SET gold = gold + :added_gold
-                """
-            ),
+            """),
             {"added_gold": total_gold_paid},
         )
 
     return CheckoutResponse(
         total_potions_bought=total_potions_bought,
         total_gold_paid=total_gold_paid,
+        order_id=order_id,  # Return the created order's ID
     )
-    # TODO: Deduct the right potions from inventory to the shop

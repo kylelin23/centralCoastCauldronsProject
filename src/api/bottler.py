@@ -136,15 +136,30 @@ def get_bottle_plan():
     Colors are expressed in integers from 0 to 100 that must sum up to exactly 100.
     """
 
-    # TODO: Fill in values below based on what is in your database
+    with db.engine.begin() as connection:
+        result = connection.execute(
+            sqlalchemy.text(
+                """
+                SELECT red_ml, green_ml, blue_ml
+                FROM global_inventory
+                """
+            )
+        ).one()
+
+    red_ml, green_ml, blue_ml = result
+
+    # Maximum potion capacity could also be dynamically fetched from a config or a database if required
+    maximum_potion_capacity = 50
+
     return create_bottle_plan(
-        red_ml=100,
-        green_ml=0,
-        blue_ml=0,
-        dark_ml=0,
-        maximum_potion_capacity=50,
+        red_ml=red_ml,
+        green_ml=green_ml,
+        blue_ml=blue_ml,
+        maximum_potion_capacity=maximum_potion_capacity,
         current_potion_inventory=[],
     )
+
+
 
 
 if __name__ == "__main__":

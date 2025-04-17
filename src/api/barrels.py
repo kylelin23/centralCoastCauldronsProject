@@ -157,13 +157,13 @@ def get_wholesale_purchase_plan(wholesale_catalog: List[Barrel]):
         row = connection.execute(
             sqlalchemy.text(
                 """
-                SELECT gold
+                SELECT gold, red_ml, green_ml, blue_ml, dark_ml
                 FROM global_inventory
                 """
             )
         ).one()
 
-        gold = row.gold
+        gold, red_ml, green_ml, blue_ml, dark_ml = row
 
     # TODO: fill in values correctly based on what is in your database
     return create_barrel_plan(
