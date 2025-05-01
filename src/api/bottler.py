@@ -34,13 +34,8 @@ class PotionMixes(BaseModel):
 
 @router.post("/deliver/{order_id}", status_code=status.HTTP_204_NO_CONTENT)
 def post_deliver_bottles(potions_delivered: List[PotionMixes], order_id: int):
-    """
-    Delivery of potions requested after plan. order_id is a unique value representing
-    a single delivery; the call is idempotent based on the order_id.
-    """
     print(f"potions delivered: {potions_delivered} order_id: {order_id}")
 
-    # TODO: Record values of delivered potions in your database.
     red_used = green_used = blue_used = dark_used = 0
 
     with db.engine.begin() as connection:
@@ -69,6 +64,19 @@ def post_deliver_bottles(potions_delivered: List[PotionMixes], order_id: int):
                 },
             )
 
+            connection.execute(
+                sqlalchemy.text(
+                    """
+                    INSERT INTO potion_ledger (sku, quantity)
+                    VALUES (:sku, :quantity)
+                    """
+                ),
+                {
+                    "sku": "_".join(map(str, pt)),
+                    "quantity": qty,
+                },
+            )
+
         connection.execute(
             sqlalchemy.text(
                 """
@@ -87,8 +95,21 @@ def post_deliver_bottles(potions_delivered: List[PotionMixes], order_id: int):
             },
         )
 
-    # TODO: Subtract ml based on how much delivered potions used.
-    pass
+        connection.execute(
+            sqlalchemy.text(
+                """
+                INSERT INTO ml_ledger (red_ml, green_ml, blue_ml, dark_ml)
+                VALUES (:r, :g, :b, :d)
+                """
+            ),
+            {
+                "r": -red_used,
+                "g": -green_used,
+                "b": -blue_used,
+                "d": -dark_used,
+            },
+        )
+
 
 
 def create_bottle_plan(

@@ -76,21 +76,48 @@ def post_deliver_barrels(barrels_delivered: List[Barrel], order_id: int):
         connection.execute(
             sqlalchemy.text(
                 """
-                UPDATE global_inventory SET
-                gold = gold - :gold_paid
+                INSERT INTO gold_ledger (gold)
+                VALUES (:gold_spent)
                 """
             ),
-            [
-                {
-                    "gold_paid": delivery.gold_paid,
-                    "red_ml": int(red_ml),
-                    "green_ml": int(green_ml),
-                    "blue_ml": int(blue_ml),
-                }
-            ],
+            {"gold_spent": -delivery.gold_paid}
         )
 
-    pass
+        connection.execute(
+            sqlalchemy.text(
+                """
+                INSERT INTO ml_ledger (red_ml, green_ml, blue_ml, dark_ml)
+                VALUES (:red_ml, :green_ml, :blue_ml, :dark_ml)
+                """
+            ),
+            {
+                "red_ml": int(red_ml),
+                "green_ml": int(green_ml),
+                "blue_ml": int(blue_ml),
+                "dark_ml": 0
+            }
+        )
+
+        connection.execute(
+            sqlalchemy.text(
+                """
+                UPDATE global_inventory SET
+                    gold = gold - :gold_paid,
+                    red_ml = red_ml + :red_ml,
+                    green_ml = green_ml + :green_ml,
+                    blue_ml = blue_ml + :blue_ml,
+                    dark_ml = dark_ml + :dark_ml
+                """
+            ),
+            {
+                "gold_paid": delivery.gold_paid,
+                "red_ml": int(red_ml),
+                "green_ml": int(green_ml),
+                "blue_ml": int(blue_ml),
+                "dark_ml": 0,
+            },
+        )
+
 
 
 def create_barrel_plan(
