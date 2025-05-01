@@ -106,43 +106,46 @@ def create_barrel_plan(
         f"gold: {gold}, max_barrel_capacity: {max_barrel_capacity}, current_red_ml: {current_red_ml}, current_green_ml: {current_green_ml}, current_blue_ml: {current_blue_ml}, wholesale_catalog: {wholesale_catalog}"
     )
 
-    colors = ["red", "blue", "green"]
-    color = random.choice(colors)
 
-    dict = {
-        "red": {"index": 0, "current_ml": current_red_ml},
-        "green": {"index": 1, "current_ml": current_green_ml},
-        "blue": {"index": 2, "current_ml": current_blue_ml},
-    }
 
-    index = dict[color]["index"]
-    currentMl = dict[color]["current_ml"]
+    while True:
+        least_ml_index = current_ml_list.index(min(current_ml_list))
+        per_catalog = sorted(
+            wholesale_catalog,
+            key=lambda barrel: (
+                0 if barrel.price == 0 else -((barrel.ml_per_barrel * barrel.potion_type[least_ml_index]) / barrel.price)
+            )
+        )
 
-    if currentMl < 5000:
+        bought = False
+        for barrel in per_catalog:
+            if (
+                gold < barrel.price
+                or cur_sto + barrel.ml_per_barrel > max_barrel_capacity
+                or barrel.quantity <= 0
+            ):
+                continue
 
-        candidateBarrel = None
-        min_price = float("inf")
-        # Find the cheapest small barrel
-        for barrel in wholesale_catalog:
-            if barrel.potion_type[index] == 1.0 and barrel.price < min_price:
-                candidateBarrel = barrel
-                min_price = barrel.price
-    if candidateBarrel and candidateBarrel.price <= gold:
-        return [BarrelOrder(sku=candidateBarrel.sku, quantity=1)]
+            for order in buyList:
+                if order.sku == barrel.sku:
+                    order.quantity += 1
+                    break
+            else:
+                buyList.append(BarrelOrder(sku=barrel.sku, quantity=1))
 
-    # find cheapest red barrel
-    red_barrel = min(
-        (barrel for barrel in wholesale_catalog if barrel.potion_type[0] == 1),
-        key=lambda b: b.price,
-        default=None,
-    )
+            gold -= barrel.price
+            cur_sto += barrel.ml_per_barrel
+            for i in range(potion_count):
+                current_ml_list[i] += int(barrel.ml_per_barrel * barrel.potion_type[i])
 
-    # make sure we can afford it
-    if red_barrel and red_barrel.price <= gold:
-        return [BarrelOrder(sku=red_barrel.sku, quantity=1)]
+            barrel.quantity -= 1
+            bought = True
+            break
 
-    # return an empty list if no affordable red barrel is found
-    return []
+        if not bought:
+            break
+
+    return buyList
 
 
 @router.post("/plan", response_model=List[BarrelOrder])

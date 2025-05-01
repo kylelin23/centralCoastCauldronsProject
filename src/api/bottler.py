@@ -99,24 +99,27 @@ def create_bottle_plan(
     maximum_potion_capacity: int,
     current_potion_inventory: List[PotionMixes],
 ) -> List[PotionMixes]:
+    import random
 
     plan = []
+    ml_list = [red_ml, green_ml, blue_ml, dark_ml]
 
-    red_quantity = min(red_ml // 100, maximum_potion_capacity)
-    if red_quantity > 0:
-        plan.append(PotionMixes(potion_type=[100, 0, 0, 0], quantity=red_quantity))
+    while sum(ml_list) >= 100 and len(plan) + len(current_potion_inventory) < maximum_potion_capacity:
+        potion = [0, 0, 0, 0]
+        while sum(potion) != 100:
+            i = random.randint(0, 3)
+            if ml_list[i] > potion[i]:
+                potion[i] += 1
 
-    green_quantity = min(
-        green_ml // 100, maximum_potion_capacity - sum(p.quantity for p in plan)
-    )
-    if green_quantity > 0:
-        plan.append(PotionMixes(potion_type=[0, 100, 0, 0], quantity=green_quantity))
+        for i in range(4):
+            ml_list[i] -= potion[i]
 
-    blue_quantity = min(
-        blue_ml // 100, maximum_potion_capacity - sum(p.quantity for p in plan)
-    )
-    if blue_quantity > 0:
-        plan.append(PotionMixes(potion_type=[0, 0, 100, 0], quantity=blue_quantity))
+        for existing in plan:
+            if existing.potion_type == potion:
+                existing.quantity += 1
+                break
+        else:
+            plan.append(PotionMixes(potion_type=potion, quantity=1))
 
     return plan
 
