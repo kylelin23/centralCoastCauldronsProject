@@ -66,6 +66,7 @@ This instrumentation takes information from the purchasing logs about how many p
 ## Step 4: Write Analytic Queries
 
 ### Hypothesis 1:
+'''sql
 SELECT
     PotionID,
     DATE(Timestamp) AS SaleDate,
