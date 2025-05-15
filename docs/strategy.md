@@ -66,8 +66,7 @@ This instrumentation takes information from the purchasing logs about how many p
 ## Step 4: Write Analytic Queries
 
 ### Hypothesis 1:
-'''sql
-SELECT
+SELECT<br>
     PotionID,
     DATE(Timestamp) AS SaleDate,
     SUM(TotalQuantitySold) AS TotalQuantitySold,
@@ -77,10 +76,9 @@ SELECT
 FROM PotionSales
 GROUP BY PotionID, DATE(Timestamp)
 ORDER BY SaleDate, PotionID;
-'''
+
 
 ### Hypothesis 2:
-'''sql
 SELECT
     CustomerClass,
     PotionID,
@@ -89,10 +87,8 @@ SELECT
 FROM PotionPurchases
 GROUP BY CustomerClass, PotionID
 ORDER BY CustomerClass, NumPurchases DESC;
-'''
 
 ### Hypothesis 3:
-'''sql
 SELECT
     PotionID,
     DATE(LogDate) AS Date,
@@ -101,4 +97,3 @@ SELECT
 FROM InventoryLogs
 GROUP BY PotionID, DATE(LogDate)
 ORDER BY Date, PotionID;
-'''
