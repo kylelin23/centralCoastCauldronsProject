@@ -65,3 +65,34 @@ This instrumentation takes information from the purchasing logs about how many p
 
 ## Step 4: Write Analytic Queries
 
+### Hypothesis 1:
+SELECT
+    PotionID,
+    DATE(Timestamp) AS SaleDate,
+    SUM(TotalQuantitySold) AS TotalQuantitySold,
+    SUM(TotalGoldEarned) AS TotalGoldEarned,
+    AVG(PotionPrice) AS AvgPotionPrice,
+    AVG(NumberOfPotionsInInventory) AS AvgInventory
+FROM PotionSales
+GROUP BY PotionID, DATE(Timestamp)
+ORDER BY SaleDate, PotionID;
+
+### Hypothesis 2:
+SELECT
+    CustomerClass,
+    PotionID,
+    COUNT(*) AS NumPurchases,
+    SUM(PotionPrice) AS TotalSpent
+FROM PotionPurchases
+GROUP BY CustomerClass, PotionID
+ORDER BY CustomerClass, NumPurchases DESC;
+
+### Hypothesis 3:
+SELECT
+    PotionID,
+    DATE(LogDate) AS Date,
+    SUM(CASE WHEN EventType = 'Stockout' THEN 1 ELSE 0 END) AS Stockouts,
+    SUM(CASE WHEN EventType = 'Expired' THEN 1 ELSE 0 END) AS ExpiredPotions
+FROM InventoryLogs
+GROUP BY PotionID, DATE(LogDate)
+ORDER BY Date, PotionID;
