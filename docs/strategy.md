@@ -77,8 +77,10 @@ SELECT
 FROM PotionSales
 GROUP BY PotionID, DATE(Timestamp)
 ORDER BY SaleDate, PotionID;
+'''
 
 ### Hypothesis 2:
+'''sql
 SELECT
     CustomerClass,
     PotionID,
@@ -87,8 +89,10 @@ SELECT
 FROM PotionPurchases
 GROUP BY CustomerClass, PotionID
 ORDER BY CustomerClass, NumPurchases DESC;
+'''
 
 ### Hypothesis 3:
+'''sql
 SELECT
     PotionID,
     DATE(LogDate) AS Date,
@@ -97,3 +101,4 @@ SELECT
 FROM InventoryLogs
 GROUP BY PotionID, DATE(LogDate)
 ORDER BY Date, PotionID;
+'''
