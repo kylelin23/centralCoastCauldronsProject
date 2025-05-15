@@ -19,4 +19,17 @@ Both reliability and recognition will be improved by making sure the right potio
 
 ## Step 2: Design Your Experiments
 
+### Hypothesis 1:
+How to measure success: Whether or not a certain potion type is bought a lot
+How to measure effects over time: Track average profit by potion type to see what potion mixes are doing well and need a change in price
+
+### Hypothesis 2:
+How to measure success: Whether or not a certain customer class is buying potions a lot
+How to measure effects over time: Track whether or not customers are buying potions a lot by class
+
+### Hypothesis 3:
+How to measure success: Whether or not past sales ever had any stockouts
+How to measure effects over time: Track how many stockouts there have been over time
+
+## Step 3: Implement Additional Instrumentation
 
