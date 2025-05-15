@@ -67,7 +67,7 @@ This instrumentation takes information from the purchasing logs about how many p
 
 ### Hypothesis 1:
 SELECT<br>
-    PotionID,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;PotionID,<br>
     DATE(Timestamp) AS SaleDate,<br>
     SUM(TotalQuantitySold) AS TotalQuantitySold,<br>
     SUM(TotalGoldEarned) AS TotalGoldEarned,<br>
