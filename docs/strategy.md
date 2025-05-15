@@ -68,11 +68,11 @@ This instrumentation takes information from the purchasing logs about how many p
 ### Hypothesis 1:
 SELECT<br>
 &nbsp;&nbsp;&nbsp;&nbsp;PotionID,<br>
-    DATE(Timestamp) AS SaleDate,<br>
-    SUM(TotalQuantitySold) AS TotalQuantitySold,<br>
-    SUM(TotalGoldEarned) AS TotalGoldEarned,<br>
-    AVG(PotionPrice) AS AvgPotionPrice,<br>
-    AVG(NumberOfPotionsInInventory) AS AvgInventory<br>
+&nbsp;&nbsp;&nbsp;&nbsp;DATE(Timestamp) AS SaleDate,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;SUM(TotalQuantitySold) AS TotalQuantitySold,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;SUM(TotalGoldEarned) AS TotalGoldEarned,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;AVG(PotionPrice) AS AvgPotionPrice,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;AVG(NumberOfPotionsInInventory) AS AvgInventory<br>
 FROM PotionSales<br>
 GROUP BY PotionID, DATE(Timestamp)<br>
 ORDER BY SaleDate, PotionID;<br>
@@ -80,20 +80,20 @@ ORDER BY SaleDate, PotionID;<br>
 
 ### Hypothesis 2:
 SELECT<br>
-    CustomerClass,<br>
-    PotionID,<br>
-    COUNT(*) AS NumPurchases,<br>
-    SUM(PotionPrice) AS TotalSpent<br>
+&nbsp;&nbsp;&nbsp;&nbsp;CustomerClass,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;PotionID,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;COUNT(*) AS NumPurchases,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;SUM(PotionPrice) AS TotalSpent<br>
 FROM PotionPurchases<br>
 GROUP BY CustomerClass, PotionID<br>
 ORDER BY CustomerClass, NumPurchases DESC;<br>
 
 ### Hypothesis 3:
 SELECT<br>
-    PotionID,<br>
-    DATE(LogDate) AS Date,<br>
-    SUM(CASE WHEN EventType = 'Stockout' THEN 1 ELSE 0 END) AS Stockouts,<br>
-    SUM(CASE WHEN EventType = 'Expired' THEN 1 ELSE 0 END) AS ExpiredPotions<br>
+&nbsp;&nbsp;&nbsp;&nbsp;PotionID,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;DATE(LogDate) AS Date,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;SUM(CASE WHEN EventType = 'Stockout' THEN 1 ELSE 0 END) AS Stockouts,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;SUM(CASE WHEN EventType = 'Expired' THEN 1 ELSE 0 END) AS ExpiredPotions<br>
 FROM InventoryLogs<br>
 GROUP BY PotionID, DATE(LogDate)<br>
 ORDER BY Date, PotionID;<br>
