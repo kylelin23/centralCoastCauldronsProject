@@ -33,3 +33,35 @@ How to measure effects over time: Track how many stockouts there have been over 
 
 ## Step 3: Implement Additional Instrumentation
 
+### Hypothesis 1: Based off of potion sales
+Recorded each time potion is bought:
+- Timestamp
+- Potion ID
+- Potion Price
+- Potion Recipe
+- Total quantity sold
+- Total gold earned
+- Number of potions in inventory
+
+This instrumentation records information on the potion price and how the inventory is doing in order to record how well the type of potion is doing in sales based off of how much it is sold.
+
+### Hypothesis 2: Based off of customer classes
+Recorded each time potion is bought:
+- Timestamp
+- Potion ID
+- Potion Price
+- Potion Recipe
+- Customer Class
+- Customer ID
+
+This instrumentation records information on the customer class in order to see what types of potions the customers are buying so we can see what potions certain types of customers like.
+
+### Hypothesis 3: Based off of past sales
+From purchasing logs
+- Potions Expired/Unsold
+- Stockouts
+
+This instrumentation takes information from the purchasing logs about how many potions have expired or were not sold and stockouts. This is too see what potions we need less of or more of.
+
+## Step 4: Write Analytic Queries
+
