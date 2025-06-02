@@ -42,29 +42,64 @@ class SearchResponse(BaseModel):
 
 @router.get("/search/", response_model=SearchResponse, tags=["search"])
 def search_orders(
-    customer_name: str = "",
+    customerName: str = "",
     potion_sku: str = "",
     search_page: str = "",
     sort_col: SearchSortOptions = SearchSortOptions.timestamp,
     sort_order: SearchSortOrder = SearchSortOrder.desc,
 ):
-    """
-    Search for cart line items by customer name and/or potion sku.
-    """
-    return SearchResponse(
-        previous=None,
-        next=None,
-        results=[
-            LineItem(
-                line_item_id=1,
-                item_sku="1 oblivion potion",
-                customer_name="Scaramouche",
-                line_item_total=50,
-                timestamp="2021-01-01T00:00:00Z",
-            )
-        ],
-    )
+    itemMaximum = 5
+    prev = None
+    next = None
 
+    with db.engine.begin() as connection:
+        query = sqlalchemy.text("""
+            SELECT
+                cart_items.id AS line_item_id,
+                potions.sku AS item_sku,
+                carts.customer AS customerName,
+                (cart_items.quantity * potions.price) AS line_item_total,
+                carts.timestamp AS timestamp
+            FROM carts
+            JOIN cart_items ON carts.id = cart_items.cart_id
+            JOIN potions ON cart_items.potion_id = potions.id
+        """)
+        results = connection.execute(query).mappings().all()
+
+    if customer_name:
+        filtered = []
+    for r in results:
+        customerLower = r["customerName"].lower()
+        search_customer_lower = customerName.lower()
+        if search_customer_lower in customerLower:
+            filtered.append(r)
+        results = filtered
+
+    if potion_sku:
+        filtered = []
+        for r in results:
+            sku_lower = r["item_sku"].lower()
+            search_sku_lower = potion_sku.lower()
+            if search_sku_lower in sku_lower:
+                filtered.append(r)
+        results = filtered
+
+    reverse = sort_order == SearchSortOrder.desc
+    results.sort(key=lambda x: x[sort_col.value], reverse=reverse)
+
+    page = int(search_page) if search_page.isdigit() else 0
+    start = page
+    end = start + itemMaximum
+    paged_results = results[start:end]
+
+    if start - itemMaximum >= 0:
+        prev = str(start - itemMaximum)
+    if end < len(results):
+        next = str(end)
+
+    items = [LineItem(**item) for item in paged_results]
+
+    return SearchResponse(prev=prev, next=next, results=items)
 
 cart_id_counter = 1
 carts: dict[int, dict[str, int]] = {}
