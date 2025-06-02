@@ -66,33 +66,34 @@ This instrumentation takes information from the purchasing logs about how many p
 ## Step 4: Write Analytic Queries
 
 ### Hypothesis 1:
-SELECT
-    PotionID,
-    DATE(Timestamp) AS SaleDate,
-    SUM(TotalQuantitySold) AS TotalQuantitySold,
-    SUM(TotalGoldEarned) AS TotalGoldEarned,
-    AVG(PotionPrice) AS AvgPotionPrice,
-    AVG(NumberOfPotionsInInventory) AS AvgInventory
-FROM PotionSales
-GROUP BY PotionID, DATE(Timestamp)
-ORDER BY SaleDate, PotionID;
+SELECT<br>
+&nbsp;&nbsp;&nbsp;&nbsp;PotionID,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;DATE(Timestamp) AS SaleDate,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;SUM(TotalQuantitySold) AS TotalQuantitySold,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;SUM(TotalGoldEarned) AS TotalGoldEarned,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;AVG(PotionPrice) AS AvgPotionPrice,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;AVG(NumberOfPotionsInInventory) AS AvgInventory<br>
+FROM PotionSales<br>
+GROUP BY PotionID, DATE(Timestamp)<br>
+ORDER BY SaleDate, PotionID;<br>
+
 
 ### Hypothesis 2:
-SELECT
-    CustomerClass,
-    PotionID,
-    COUNT(*) AS NumPurchases,
-    SUM(PotionPrice) AS TotalSpent
-FROM PotionPurchases
-GROUP BY CustomerClass, PotionID
-ORDER BY CustomerClass, NumPurchases DESC;
+SELECT<br>
+&nbsp;&nbsp;&nbsp;&nbsp;CustomerClass,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;PotionID,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;COUNT(*) AS NumPurchases,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;SUM(PotionPrice) AS TotalSpent<br>
+FROM PotionPurchases<br>
+GROUP BY CustomerClass, PotionID<br>
+ORDER BY CustomerClass, NumPurchases DESC;<br>
 
 ### Hypothesis 3:
-SELECT
-    PotionID,
-    DATE(LogDate) AS Date,
-    SUM(CASE WHEN EventType = 'Stockout' THEN 1 ELSE 0 END) AS Stockouts,
-    SUM(CASE WHEN EventType = 'Expired' THEN 1 ELSE 0 END) AS ExpiredPotions
-FROM InventoryLogs
-GROUP BY PotionID, DATE(LogDate)
-ORDER BY Date, PotionID;
+SELECT<br>
+&nbsp;&nbsp;&nbsp;&nbsp;PotionID,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;DATE(LogDate) AS Date,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;SUM(CASE WHEN EventType = 'Stockout' THEN 1 ELSE 0 END) AS Stockouts,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;SUM(CASE WHEN EventType = 'Expired' THEN 1 ELSE 0 END) AS ExpiredPotions<br>
+FROM InventoryLogs<br>
+GROUP BY PotionID, DATE(LogDate)<br>
+ORDER BY Date, PotionID;<br>
